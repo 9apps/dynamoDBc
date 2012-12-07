@@ -105,18 +105,6 @@ PyObject* get_item(PyObject *pModule, PyObject *pTable, int index)
 	return pItem;
 }
 
-PyObject *make_dictionary(int length, char* name, char* lastname, char* city)
-{
-	PyObject *pDict = PyDict_New();
-
-	PyDict_SetItem(pDict, Py_BuildValue("s", "length"), Py_BuildValue("i", length));
-	PyDict_SetItem(pDict, Py_BuildValue("s", "name"), Py_BuildValue("s", name));
-	PyDict_SetItem(pDict, Py_BuildValue("s", "lastname"), Py_BuildValue("s", lastname));
-	PyDict_SetItem(pDict, Py_BuildValue("s", "city"), Py_BuildValue("s", city));
-
-	return pDict;
-}
-
 PyObject* set_item(PyObject *pModule, PyObject *pTable, int index, PyObject *pDict)
 {
 	PyObject *pArgs = NULL, *pFunc = NULL;
