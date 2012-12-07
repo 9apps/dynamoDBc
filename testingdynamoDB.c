@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 {
 	PyObject *pModule, *pConn, *pTable, *pItem;
 
-	init_python("/home/jasper/dynDB");
+	init_python("/home/jasper/dynamoDBc");
 	pModule = get_module("dynamodb");
 	if( pModule == NULL)
 	{
