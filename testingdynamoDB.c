@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	}
 
 	// get an item
-	pItem = get_item(pModule, pTable, 1);
+	pItem = get_item(pModule, pTable, 5);
 	printf("We got the item: %s\n", PyString_AsString(pItem));
 	Py_DECREF(pItem);
         Py_DECREF(pTable);

@@ -17,25 +17,23 @@ void init_python(char *module_dir)
 
 PyObject* get_module(char *module)
 {
-	PyObject *pName, *pModule;
-	pModule = NULL;
+	PyObject *pName = NULL, *pModule = NULL;
 
         pName = PyString_FromString(module);
         pModule = PyImport_Import(pName);
 	if (pModule == NULL)
 	{
-		printf("we do NOT get the module %s\n", module);
+		printf("failed to get the moduel%s\n", module);
 	}
+
+	Py_DECREF(pName);
 	return pModule;
 }
 
 PyObject* get_conn(PyObject *pModule, char* region)
 {
-	PyObject *pArgs, *pRegion;
-	PyObject *pFunc, *pConn;
-
-	pConn = NULL;
-	pFunc = NULL;
+	PyObject *pArgs = NULL;
+	PyObject *pFunc = NULL, *pConn = NULL;
 
         pFunc = PyObject_GetAttrString(pModule, "connect_dynamodb");
         if (pFunc == NULL || PyCallable_Check(pFunc) == 0)
@@ -45,8 +43,7 @@ PyObject* get_conn(PyObject *pModule, char* region)
 	}
 
         pArgs = PyTuple_New(1);
-        pRegion = PyString_FromString(region);
-        PyTuple_SetItem(pArgs, 0, pRegion);
+        PyTuple_SetItem(pArgs, 0, PyString_FromString(region));
 
         pConn = PyObject_CallObject(pFunc, pArgs);
         if (pConn == NULL)
@@ -56,7 +53,6 @@ PyObject* get_conn(PyObject *pModule, char* region)
 
 	// cleanup temp objects
 	Py_DECREF(pArgs);
-	Py_DECREF(pRegion);
 	Py_DECREF(pFunc);
 
 	return pConn;
@@ -64,40 +60,38 @@ PyObject* get_conn(PyObject *pModule, char* region)
 
 PyObject* get_table(PyObject *pModule, PyObject *pConn, char *table)
 {
-	PyObject *pFunc;
-	PyObject *pArgs, *pTableName;
-	PyObject *pTable;
+	PyObject *pFunc = NULL;
+	PyObject *pARGS = NULL;
+	PyObject *pTable = NULL;  // return value
 
 	pFunc = PyObject_GetAttrString(pModule, "get_table");
-	pArgs = PyTuple_New(2);
+	pARGS = PyTuple_New(2);
 
-	pTableName = PyString_FromString(table);
-	PyTuple_SetItem(pArgs, 0, pConn);
-	PyTuple_SetItem(pArgs, 1, pTableName);
-	pTable = PyObject_CallObject(pFunc, pArgs);
+	Py_INCREF(pConn);         // so pConn ref is not deleted by Py_XDECREF(pARGS)
+	PyTuple_SetItem(pARGS, 0, pConn);
+	PyTuple_SetItem(pARGS, 1, PyString_FromString(table));
+	pTable = PyObject_CallObject(pFunc, pARGS);
 	if (pTable == NULL)
 	{
 		printf("Failed to get the table: %sn", table);
 	}
 
 	// cleanup temp objects
-	// Py_DECREF(pArgs);   // Do not delete pArgs somehow needed by pTable (connected); gives a 'Segmentation fault'
-	Py_DECREF(pTableName);
-	Py_DECREF(pFunc);
+	Py_XDECREF(pARGS); 
+	Py_XDECREF(pFunc);
 
 	return pTable;
 }
 
 PyObject* get_item(PyObject *pModule, PyObject *pTable, int index)
 {
-	PyObject *pArgs, *pIndex, *pFunc;  
-	PyObject *pItem;
+	PyObject *pArgs = NULL, *pFunc = NULL;  
+	PyObject *pItem = NULL;
 
 	pFunc = PyObject_GetAttrString(pModule, "get_item");
 	pArgs = PyTuple_New(2);
-	pIndex = PyInt_FromLong(1);
 	PyTuple_SetItem(pArgs, 0, pTable);
-	PyTuple_SetItem(pArgs, 1, pIndex);
+	PyTuple_SetItem(pArgs, 1, PyInt_FromLong(index));
 	pItem = PyObject_CallObject(pFunc, pArgs);
 	if (pItem == NULL) 
 	{
@@ -106,7 +100,6 @@ PyObject* get_item(PyObject *pModule, PyObject *pTable, int index)
 
 	// cleanup temp objects
 	Py_DECREF(pArgs);
-	Py_DECREF(pIndex);
 	Py_DECREF(pFunc);
 
 	return pItem;
@@ -126,14 +119,13 @@ PyObject *make_dictionary(int length, char* name, char* lastname, char* city)
 
 PyObject* set_item(PyObject *pModule, PyObject *pTable, int index, PyObject *pDict)
 {
-	PyObject *pArgs, *pIndex, *pFunc;
-	PyObject *pItem;
+	PyObject *pArgs = NULL, *pFunc = NULL;
+	PyObject *pItem = NULL;
 
 	pFunc = PyObject_GetAttrString(pModule, "set_item");
 	pArgs = PyTuple_New(3);
-	pIndex = PyInt_FromLong(index);
 	PyTuple_SetItem(pArgs, 0, pTable);
-	PyTuple_SetItem(pArgs, 1, pIndex);
+	PyTuple_SetItem(pArgs, 1, PyInt_FromLong(index));
 	PyTuple_SetItem(pArgs, 2, pDict);
 	pItem = PyObject_CallObject(pFunc, pArgs);
 	if (pItem == NULL) 
@@ -143,7 +135,6 @@ PyObject* set_item(PyObject *pModule, PyObject *pTable, int index, PyObject *pDi
 
 	// cleanup temp objects
 	Py_DECREF(pArgs);
-	Py_DECREF(pIndex);
 	Py_DECREF(pFunc);
 
 	return pItem;
