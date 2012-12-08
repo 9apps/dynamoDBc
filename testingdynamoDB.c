@@ -17,7 +17,7 @@ PyObject *make_dictionary(int length, char* name, char* lastname, char* city)
 
 int main(int argc, char *argv[])
 {
-	PyObject *pModule, *pConn, *pTable, *pItem;
+	PyObject *pModule, *pConn, *pTable, *pItem = NULL;
 
 	init_python("/home/jasper/dynamoDBc");
 	pModule = get_module("dynamodb");
@@ -42,8 +42,21 @@ int main(int argc, char *argv[])
 
 	// get an item
 	pItem = get_item(pModule, pTable, 5);
-	printf("We got the item: %s\n", PyString_AsString(pItem));
-	Py_DECREF(pItem);
+	if( pItem != NULL)
+	{
+		printf("We got the item: %s\n", PyString_AsString(pItem));
+		Py_DECREF(pItem);
+	}
+        Py_DECREF(pTable);
+
+	// get an item
+	pTable = get_table(pModule, pConn, "testingc"); 
+	pItem = get_item(pModule, pTable, 100);
+	if( pItem != NULL)
+	{
+		printf("We got the item: %s\n", PyString_AsString(pItem));
+		Py_DECREF(pItem);
+	}
         Py_DECREF(pTable);
 	
 	// and add  an item
